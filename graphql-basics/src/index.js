@@ -1,4 +1,5 @@
 import {GraphQLServer} from 'graphql-yoga';
+import uuidv4 from 'uuid/v4';
 
 //Scalar Types = String, Boolean, Int/Float/Double, ID (unique identifiers)
 
@@ -28,21 +29,21 @@ const posts = [
         id: '1',
         title: 'A arte de ser feliz',
         body: 'Vem ser feliz programando',
-        pubilshed: true,
+        published: true,
         author: '1'
     },
     {
         id: '2',
         title: 'Viajando o mundo',
         body: 'Vamos viajar o mundo todo',
-        pubilshed: false,
+        published: false,
         author: '2'
     },
     {
         id: '3',
         title: 'Cozinhando como profissional',
         body: 'A comida esta muito boa',
-        pubilshed: true,
+        published: true,
         author: '3'
     }
 ]
@@ -77,30 +78,15 @@ const comments = [
 //Type definitions (schema)
 const typeDefs = `
     type Query {
-
-        id: ID!
-        name: String!
-        age: Int!
-        employed: Boolean!
-        gpa:Float
-        title: String!
-        price: Float!
-        releaseYear: Int
-        rating: Float
-        inStock: Boolean!
-
-
-        me: User!
-        post: Post!
-
-        greeting(name: String, position: String): String!
-        add(a: Float!, b: Float!):Float!
-
-        grades: [Int!]!
-        sum(numbers:[Float!]!): Float!
         users(query: String):[User!]!
         posts(query: String):[Post!]!
         comments: [Comment!]!
+    }
+
+    type Mutation {
+        createUser (name: String!, email: String!, age: Int): User!
+        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
+        createComment(text: String!, author:ID!, post:ID!) : Comment!
     }
 
     type User{
@@ -116,7 +102,7 @@ const typeDefs = `
         id: ID
         title: String!
         body: String!
-        pubilshed: Boolean!
+        published: Boolean!
         author: User!
         comments:[Comment!]!
     }
@@ -131,78 +117,6 @@ const typeDefs = `
 //Resolvers
 const resolvers = {
     Query: {
-
-        //Scalar Types
-        id() {
-            return 30;
-        },
-        name(){
-            return 'Heitor';
-        },
-        age(){
-            return 27;
-        },
-        employed(){
-            return true;
-        },
-        gpa(){
-            return 3.5;
-        },
-        title(){
-            return 'acai';
-        },
-        price(){
-            return 31.50;
-        },
-        releaseYear(){
-            return 2019;
-        },
-        rating(){
-            return null;
-        },
-        inStock(){
-            return true;
-        },
-
-        //Custom Types
-        me(){
-            return {
-                id: '2',
-                name: 'Heitor',
-                email: 'heitor@gmail.com',
-                age: '29'
-            }
-        },
-        post() {
-            return {
-                id: 23,
-                title: 'The life',
-                body: 'Sun is shining the weather is sweet',
-                pubilshed: true
-            }
-        },
-
-        //Operation Arguments
-        greeting(parent, args, ctx, info) {
-            return args.name ? 
-            args.position ? `Hello ${args.name} ! You are a ${args.position}` : `Hello ${args.name}`
-             : 'Hello!';
-        },
-        add(parent,args,ctx,info){
-            return args.a + args.b;
-        },
-
-        //Arrays
-        grades(parent, args, ctx, info){
-            return [99,44,930,999,303];
-        },
-        sum(parent, args, ctx, info){
-            if(args.numbers.length === 0)
-                return 0;
-            return args.numbers.reduce((prev,current)=> {
-                return prev + current;
-            })
-        },
         users(parent, args, ctx, info) {
             return !args.query ? users: 
             users.filter((value,index) => {
@@ -220,6 +134,81 @@ const resolvers = {
             return comments;
         }
 
+    },
+    Mutation : {
+        createUser(parent, args, ctx, info) {
+            const emailTaken = users.some((user,index) => {
+                return user.email === args.email;
+            });
+
+            if (emailTaken) {
+                throw new Error('Email already taken');
+            }
+            
+            const user = {
+                id: uuidv4(),
+                name: args.name,
+                email: args.email,
+                age: args.age
+            }
+
+            users.push(user);
+
+            return user;
+
+        },
+
+        createPost(parent,args,ctx,info) {
+            const userExist = users.some((user,index) => {
+                return user.id === args.author;
+            });
+
+            if(!userExist) {
+                throw new Error('User not found');
+            }
+
+            const post = {
+                id: uuidv4(),
+                title: args.title,
+                body: args.body,
+                published: args.published,
+                author: args.author
+            }
+
+            posts.push(post);
+            return post;
+        },
+
+        createComment(parent,args,ctx,info) {
+            var userExists = users.some((user,index) => {
+                return user.id === args.author
+            });
+
+            var postExists = posts.find((post,index) => {
+                return post.id === args.post
+            });
+
+            if(!userExists) {
+                throw new Error('User not found');
+            }
+            if(!postExists) {
+                throw new Error('Post not found');
+            }
+            if(!postExists.published){
+                throw new Error('Post is not published yet');
+            }
+
+            const comment = {
+                id: uuidv4(),
+                text:args.text,
+                author: args.author,
+                post: args.post
+            }
+
+            comments.push(comment);
+
+            return comment;
+        }
     },
     Post: {
         author(parent,args,ctx, info) {
