@@ -3,7 +3,7 @@ import uuidv4 from 'uuid/v4';
 
 //Scalar Types = String, Boolean, Int/Float/Double, ID (unique identifiers)
 
-const users = [
+let users = [
     {
         id: '1',
         name: 'Heitor',
@@ -24,7 +24,7 @@ const users = [
     }
 ];
 
-const posts = [
+let posts = [
     {
         id: '1',
         title: 'A arte de ser feliz',
@@ -48,7 +48,7 @@ const posts = [
     }
 ]
 
-const comments = [
+let comments = [
     {
         id:'1',
         text:'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.',
@@ -84,9 +84,18 @@ const typeDefs = `
     }
 
     type Mutation {
-        createUser (name: String!, email: String!, age: Int): User!
-        createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
-        createComment(text: String!, author:ID!, post:ID!) : Comment!
+        createUser (data: CreateUserInput): User!
+        deleteUser(id: ID!):User!
+        createPost(data: CreatePostInput): Post!
+        deletePost(id: ID!): Post!
+        createComment(data:CreateCommentInput) : Comment!
+        deleteComment(id: ID!): Comment!
+    }
+
+    input CreateUserInput {
+        name: String!
+        email: String!
+        age: Int
     }
 
     type User{
@@ -98,6 +107,13 @@ const typeDefs = `
         comments:[Comment!]!
     }
 
+    input CreatePostInput{
+        title: String!
+        body: String!
+        published: Boolean!
+        author: ID!
+    }
+
     type Post {
         id: ID
         title: String!
@@ -105,6 +121,12 @@ const typeDefs = `
         published: Boolean!
         author: User!
         comments:[Comment!]!
+    }
+
+    input CreateCommentInput {
+        text: String!
+        author: ID!
+        post: ID!
     }
 
     type Comment {
@@ -138,7 +160,7 @@ const resolvers = {
     Mutation : {
         createUser(parent, args, ctx, info) {
             const emailTaken = users.some((user,index) => {
-                return user.email === args.email;
+                return user.email === args.data.email;
             });
 
             if (emailTaken) {
@@ -147,9 +169,7 @@ const resolvers = {
             
             const user = {
                 id: uuidv4(),
-                name: args.name,
-                email: args.email,
-                age: args.age
+                ...args.data
             }
 
             users.push(user);
@@ -158,9 +178,30 @@ const resolvers = {
 
         },
 
+        deleteUser(parent, args, ctx, info) {
+            const userIdx = users.findIndex((user,index) => user.id === args.id);
+            if(userIdx < 0) throw Error ('User not found');
+            
+            const deletedUser = users.splice(userIdx,1)[0];
+
+            posts = posts.filter((post,index) => {
+                const match = post.author === args.id
+                if(match){
+                    comments = comments.filter((comment,idx) => {
+                        return comment.post !== post.id;
+                    });
+                }
+                return !match
+            });
+            comments = comments.filter((comment,index) => comment.author !== args.id);
+
+            return deletedUser;
+            
+        },
+
         createPost(parent,args,ctx,info) {
             const userExist = users.some((user,index) => {
-                return user.id === args.author;
+                return user.id === args.data.author;
             });
 
             if(!userExist) {
@@ -169,23 +210,29 @@ const resolvers = {
 
             const post = {
                 id: uuidv4(),
-                title: args.title,
-                body: args.body,
-                published: args.published,
-                author: args.author
+                ...args.data
             }
 
             posts.push(post);
             return post;
         },
+        deletePost(parente,args,ctx,info){
+            const postIndex = posts.findIndex((post,index) => {
+                return post.id == args.id;
+            });
+            if(postIndex < 0) throw Error('Post not found');
+            const post = posts.splice(postIndex,1)[0];
+            comments = comments.filter((comment,index) => comment.post !== args.id);
 
+            return post;
+        },
         createComment(parent,args,ctx,info) {
-            var userExists = users.some((user,index) => {
-                return user.id === args.author
+            const userExists = users.some((user,index) => {
+                return user.id === args.data.author
             });
 
-            var postExists = posts.find((post,index) => {
-                return post.id === args.post
+            const postExists = posts.find((post,index) => {
+                return post.id === args.data.post
             });
 
             if(!userExists) {
@@ -200,13 +247,20 @@ const resolvers = {
 
             const comment = {
                 id: uuidv4(),
-                text:args.text,
-                author: args.author,
-                post: args.post
+                ...args.data
             }
 
             comments.push(comment);
 
+            return comment;
+        },
+        deleteComment(parent, args, ctx, info) {
+            const commentIndex = comments.findIndex((comment,index) => comment.id === args.id);
+            
+            if(commentIndex < 0) throw Error('Comment not found');
+
+            const comment = comments.splice(commentIndex,1)[0];
+            
             return comment;
         }
     },
