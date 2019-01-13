@@ -23,7 +23,7 @@ const Mutation = {
 
     deleteUser(parent, args, {db}, info) {
         const userIdx = db.users.findIndex((user,index) => user.id === args.id);
-        if(userIdx < 0) throw Error ('User not found');
+        if(userIdx < 0) throw new Error ('User not found');
         
         const deletedUser = db.users.splice(userIdx,1)[0];
 
@@ -41,7 +41,27 @@ const Mutation = {
         return deletedUser;
         
     },
+    updateUser(parent, {id,data}, {db}, info) {
+        let user = db.users.find((user,index) => {
+            return user.id === id
+        });
+        if(!user) throw Error('User not found');
 
+        if(typeof data.email === 'string'){
+            const emailTaken = db.users.some((user,index) => user.email === data.email)
+            if(emailTaken) throw new Error('This email was already taken');
+            user.email = data.email
+        }
+
+        if(typeof data.name === 'string'){
+            user.name = data.name
+        }
+
+        if(typeof data.age !== 'undefined'){
+            user.age = data.age;
+        }
+        return user;
+    },
     createPost(parent,args,{db},info) {
         const userExist = db.users.some((user,index) => {
             return user.id === args.data.author;
@@ -63,9 +83,26 @@ const Mutation = {
         const postIndex = db.posts.findIndex((post,index) => {
             return post.id == args.id;
         });
-        if(postIndex < 0) throw Error('Post not found');
+        if(postIndex < 0) throw new Error('Post not found');
         const post = db.posts.splice(postIndex,1)[0];
         db.comments = db.comments.filter((comment,index) => comment.post !== args.id);
+
+        return post;
+    },
+    updatePost(parent,{id,data},{db},info) {
+        let post = db.posts.find((post,index) => {
+            return post.id === id;
+        });
+        if(!post) throw new Error('Post not found');
+        if(typeof data.title === 'string') {
+            post.title = data.title;
+        }
+        if(typeof data.body === 'string') {
+            post.body = data.body;
+        }
+        if(typeof data.published === 'boolean') {
+            post.published = data.published;
+        }
 
         return post;
     },
@@ -100,10 +137,22 @@ const Mutation = {
     deleteComment(parent, args, {db}, info) {
         const commentIndex = db.comments.findIndex((comment,index) => comment.id === args.id);
         
-        if(commentIndex < 0) throw Error('Comment not found');
+        if(commentIndex < 0) throw new Error('Comment not found');
 
         const comment = db.comments.splice(commentIndex,1)[0];
         
+        return comment;
+    },
+    updateComment(parent,{id,data}, {db}, info) {
+        let comment = db.comments.find((comment,index) => {
+            return comment.id === id;
+        });
+
+        if(!comment) throw Error('Comment not found');
+        if(typeof data.text === 'string') {
+            comment.text = data.text;
+        }
+
         return comment;
     }
 }
