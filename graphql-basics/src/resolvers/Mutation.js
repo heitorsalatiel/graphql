@@ -79,24 +79,41 @@ const Mutation = {
 
         db.posts.push(post);
         if(post.published) {
-            pubSub.publish(`post`,{post});
+            pubSub.publish(`post`,{
+                post:{
+                    data:post,
+                    mutation: 'CREATED'
+                }
+            });
         }
         return post;
     },
-    deletePost(parente,args,{db},info){
+    deletePost(parente,args,{db, pubSub},info){
         const postIndex = db.posts.findIndex((post,index) => {
             return post.id == args.id;
         });
         if(postIndex < 0) throw new Error('Post not found');
-        const post = db.posts.splice(postIndex,1)[0];
+        const [post] = db.posts.splice(postIndex,1);
         db.comments = db.comments.filter((comment,index) => comment.post !== args.id);
+
+        if(post.published) {
+            pubSub.publish('post',{
+                post: {
+                    mutation: 'DELETED',
+                    data: post
+                }
+            })
+        }
 
         return post;
     },
-    updatePost(parent,{id,data},{db},info) {
+    updatePost(parent,{id,data},{db, pubSub},info) {
         let post = db.posts.find((post,index) => {
             return post.id === id;
         });
+
+        const originalPost = {...post};
+
         if(!post) throw new Error('Post not found');
         if(typeof data.title === 'string') {
             post.title = data.title;
@@ -106,6 +123,32 @@ const Mutation = {
         }
         if(typeof data.published === 'boolean') {
             post.published = data.published;
+           
+            if(originalPost.published && !post.published) {
+                
+                pubSub.publish('post', {
+                    post : {
+                        mutation:'DELETED',
+                        data: originalPost
+                    }
+                });
+
+            } else if (!originalPost.published && post.published) {
+                pubSub.publish('post', {
+                    post : {
+                        mutation:'CREATED',
+                        data: post
+                    }
+                });
+            }
+
+        } else if(post.published) {
+            pubSub.publish('post', {
+                post : {
+                    mutation:'UPDATED',
+                    data: post
+                }
+            });
         }
 
         return post;
@@ -135,20 +178,33 @@ const Mutation = {
         }
 
         db.comments.push(comment);
-        pubSub.publish(`comment ${args.data.post}`,{comment});
+
+        pubSub.publish(`comment ${args.data.post}`,{
+            comment: {
+                data: comment,
+                mutation: 'CREATED'
+            }
+        });
 
         return comment;
     },
-    deleteComment(parent, args, {db}, info) {
+    deleteComment(parent, args, {db, pubSub}, info) {
         const commentIndex = db.comments.findIndex((comment,index) => comment.id === args.id);
         
         if(commentIndex < 0) throw new Error('Comment not found');
 
-        const comment = db.comments.splice(commentIndex,1)[0];
+        const [comment] = db.comments.splice(commentIndex,1);
         
+        pubSub.publish(`comment ${comment.post}`,{
+            comment: {
+                data: comment,
+                mutation: 'DELETED'
+            }
+        });
+
         return comment;
     },
-    updateComment(parent,{id,data}, {db}, info) {
+    updateComment(parent,{id,data}, {db, pubSub}, info) {
         let comment = db.comments.find((comment,index) => {
             return comment.id === id;
         });
@@ -157,6 +213,13 @@ const Mutation = {
         if(typeof data.text === 'string') {
             comment.text = data.text;
         }
+
+        pubSub.publish(`comment ${comment.post}`,{
+            comment: {
+                data: comment,
+                mutation: 'UPDATED'
+            }
+        });
 
         return comment;
     }
