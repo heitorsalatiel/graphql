@@ -1,0 +1,24 @@
+#SET_NULL (default) - CASCADE
+
+type User{
+    id: ID! @unique
+    username: String! @unique
+    reviews:[Review!]!  @relation(name:"UserToReview", onDelete:CASCADE)
+}
+
+type Movie {
+    id: ID! @unique
+    title: String!
+    director: String!
+    imdb: Float! 
+    reviews: [Review!]! @relation(name:"MovieToReview", onDelete:CASCADE)
+}
+
+type Review {
+    id: ID! @unique
+    text: String!
+    rating: Float!
+    user: User! @relation(name:"UserToReview", onDelete:SET_NULL)
+    movie: Movie! @relation(name:"MovieToReview", onDelete:SET_NULL)
+}
+
