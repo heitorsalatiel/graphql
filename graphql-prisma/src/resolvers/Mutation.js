@@ -31,7 +31,6 @@ const Mutation = {
         }, info)
     },
     async createPost(parent,{data},{prisma},info) {
-        console.log(data);
        return prisma.mutation.createPost({
             data: {
                 title: data.title,
@@ -50,7 +49,7 @@ const Mutation = {
             where: {
                 id:id
             }
-        }) 
+        }, info); 
     },
     async updatePost(parent,{id,data},{prisma},info) {
 
@@ -59,7 +58,7 @@ const Mutation = {
                 id:id
             },
             data:data
-        })
+        }, info)
 
     },
     async createComment(parent,{data},{prisma},info) {

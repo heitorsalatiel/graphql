@@ -84,6 +84,11 @@
         post: Post!
     }
 
+    type Teste {
+        id: ID!
+        name: String!
+    }
+
     enum MutationType {
         CREATED
         DELETED
@@ -97,6 +102,6 @@
 
     type CommentSubscriptionPayload{
         mutation: MutationType!
-        data: Comment!
+        node: Comment!
     }
     
