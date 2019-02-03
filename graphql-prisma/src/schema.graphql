@@ -40,6 +40,7 @@
         id: ID!
         name: String!
         email: String!
+        password: String!
         age: Int
         posts:[Post!]!
         comments:[Comment!]!
@@ -97,11 +98,11 @@
 
     type PostSubscriptionPayload {
         mutation: MutationType!
-        data: Post!
+        node: Post
     }
 
     type CommentSubscriptionPayload{
         mutation: MutationType!
-        node: Comment!
+        node: Comment
     }
     
