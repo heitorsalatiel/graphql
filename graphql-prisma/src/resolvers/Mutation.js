@@ -1,9 +1,20 @@
-import uuidv4 from 'uuid/v4';
+import bcrypt from 'bcryptjs';
 
 const Mutation = {
     async createUser(parent, args, {prisma}, info) {
+        const data = {...args.data};
+        const password = data.password;
+        if(password.length < 8) {
+            throw new Error(`Password must be 8 characters long at least...`);
+        }
+
+        const hashPassword = await bcrypt.hash(password,10);
+
         const user = await prisma.mutation.createUser({
-            data: args.data
+            data: {
+                ...data,
+                password:hashPassword
+            }
         }, info)
 
         return user;
