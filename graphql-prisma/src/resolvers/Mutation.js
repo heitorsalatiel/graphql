@@ -110,7 +110,27 @@ const Mutation = {
             },
             data:data
         },info)
-    }   
+    },
+    
+    async login(parent,{email,password},{prisma},info) {
+
+        const usr = await prisma.query.user({
+            where:{
+                email:email
+            }
+        });
+        
+        if(!usr) throw new Error('Unable to login!');
+        const isLoginSuccessful = await bcrypt.compare(password, usr.password);
+        if(!isLoginSuccessful) throw new Error('Unable to login!');
+
+        const token = jwt.sign({id:usr.id},'123456789');
+
+        return {
+            token,
+            user:usr
+        };
+    }
 }
 
 export default Mutation;

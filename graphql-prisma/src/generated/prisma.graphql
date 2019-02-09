@@ -1,5 +1,5 @@
 # source: http://192.168.99.100:4466
-# timestamp: Sun Feb 03 2019 10:49:10 GMT-0800 (Pacific Standard Time)
+# timestamp: Tue Feb 05 2019 17:32:00 GMT-0800 (Pacific Standard Time)
 
 type AggregateComment {
   count: Int!
@@ -1332,4 +1332,5 @@ input UserWhereInput {
 
 input UserWhereUniqueInput {
   id: ID
+  email: String
 }
