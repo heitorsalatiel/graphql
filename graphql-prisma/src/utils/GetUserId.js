@@ -7,8 +7,8 @@ const getUserId = (request) => {
 
     const codeToken = header.replace('Bearer ','');
     const decoded = jwt.verify(codeToken,'thisisasecret');
-
-    return decoded.userId;
+console.log(decoded);
+    return decoded.id;
 }
 
 export default getUserId; 
