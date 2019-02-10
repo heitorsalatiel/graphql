@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
+import GetUserId from './../utils/GetUserId';
 
 const Mutation = {
     async createUser(parent, args, {prisma}, info) {
@@ -48,7 +48,10 @@ const Mutation = {
 
         }, info)
     },
-    async createPost(parent,{data},{prisma},info) {
+    async createPost(parent,{data},{prisma, request},info) {
+
+       const userId = GetUserId(request);
+
        return prisma.mutation.createPost({
             data: {
                 title: data.title,
@@ -56,7 +59,7 @@ const Mutation = {
                 published: data.published,
                 author: {
                     connect : {
-                        id: data.author
+                        id: userId
                     }
                 }
             }
@@ -119,12 +122,12 @@ const Mutation = {
                 email:email
             }
         });
-        
+
         if(!usr) throw new Error('Unable to login!');
         const isLoginSuccessful = await bcrypt.compare(password, usr.password);
         if(!isLoginSuccessful) throw new Error('Unable to login!');
 
-        const token = jwt.sign({id:usr.id},'123456789');
+        const token = jwt.sign({id:usr.id},'thisisasecret');
 
         return {
             token,
