@@ -65,7 +65,7 @@ const Query = {
     async me(parent, args, {prisma, request}, info) {
         const userId = getUserId(request); 
 
-        const user = prisma.query.user({
+        const user = await prisma.query.user({
             where: {
                 id:userId
             }
