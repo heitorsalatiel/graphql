@@ -1,4 +1,5 @@
 import getUserId from "../utils/GetUserId";
+import { isRegExp } from "util";
 
 const Query = {
     users(parent, args, {prisma}, info) {
@@ -15,11 +16,29 @@ const Query = {
         }
         return prisma.query.users(opArgs, info);
     },
-    posts(parent, args, {prisma}, info){
+    posts(parent, args, {prisma,request}, info){
+        const userId = getUserId(request,false);
+        const opArgs = {
+            where:{
+                OR:[{
+                    published: true
+                },{
+                    author: {
+                        id:userId
+                    }
+                }]
+            }
+        };
 
-        const opArgs = {}
+        return prisma.query.posts(opArgs,info);
+    },
+    postsByFilter(parent,args,{prisma,request}, info) {
+
+        const opArgs = {};
+
         if(args.query) {
             opArgs.where = {
+                published: true,
                 OR:[{
                     title_contains: args.query
                 },
@@ -30,6 +49,29 @@ const Query = {
         }
 
         return prisma.query.posts(opArgs,info);
+    },
+    myPosts(parent,args,{prisma,request}, info) {
+        const userId =  getUserId(request);
+
+        const opArgs = {
+            where: {
+                author:{
+                    id: userId
+                }
+            }
+        }
+
+        if(args.query) {
+            opArgs.where.OR=[{
+                    title_contains: args.query
+                },
+                {
+                    body_contains:  args.query
+                }]
+        }
+
+        return prisma.query.posts(opArgs,info);
+
     },
     comments(parent, args, {prisma}, info){
         const opArgs = {}

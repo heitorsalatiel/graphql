@@ -1,6 +1,8 @@
     type Query {
         users(query: String):[User!]!
-        posts(query: String):[Post!]!
+        posts:[Post!]!
+        postsByFilter(query: String!):[Post!]!
+        myPosts(query: String):[Post!]!
         comments: [Comment!]!
         post(id: ID!):  Post!
         me:User!
