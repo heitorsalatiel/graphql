@@ -1,3 +1,5 @@
-const Post = {}
+const Post = {
+    
+}
 
 export default Post;
