@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import GetUserId from './../utils/GetUserId';
+import SignToken from './../utils/TokenGenerator';
 
 const Mutation = {
     async createUser(parent, args, {prisma}, info) {
@@ -22,7 +22,7 @@ const Mutation = {
 
         return {
             user,
-            token: jwt.sign({userId:user.id},'thisisasecret')
+            token: SignToken(user.id)
         };
 
     },
@@ -93,8 +93,19 @@ const Mutation = {
                 id: userId
             }
         });
-
         if(!postExist) throw new Error('Unable to update post');
+        
+
+        const isPublished = await prisma.query.posts({id: id, published:true});
+        if(isPublished && !data.published) {
+            await prisma.mutation.deleteManyComments({
+                where:{
+                    post: {
+                        id: id
+                    }
+                }    
+            });
+        }
 
         return prisma.mutation.updatePost({
             where: {
@@ -107,7 +118,11 @@ const Mutation = {
     async createComment(parent,{data},{prisma,request},info) {
 
         const userId = GetUserId(request);
-
+        const postExists = await prisma.exists.Post({
+            id:data.post, 
+            published:true
+        });
+        if(!postExists) throw new Error('Unable to find post');
         return prisma.mutation.createComment({
             data: {
                 text: data.text,
@@ -173,7 +188,7 @@ const Mutation = {
         const isLoginSuccessful = await bcrypt.compare(password, usr.password);
         if(!isLoginSuccessful) throw new Error('Unable to login!');
 
-        const token = jwt.sign({id:usr.id},'thisisasecret');
+        const token = SignToken(usr.id);
 
         return {
             token,

@@ -7,10 +7,8 @@ const Query = {
         const opArgs = {}
         if(args.query){
             opArgs.where = {
-                AND: [{
+                OR: [{
                     name_contains: args.query
-                },{
-                    email_contains:args.query
                 }]
             }
         }
