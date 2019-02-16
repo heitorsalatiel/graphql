@@ -47,6 +47,7 @@
         name: String
         email: String
         age: Int
+        password: String
     }
 
     type User{
