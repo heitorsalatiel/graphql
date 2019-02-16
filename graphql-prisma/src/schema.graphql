@@ -1,9 +1,12 @@
+    
+    # import UserOrderByInput,PostOrderByInput,CommentOrderByInput from './generated/prisma.graphql'
+
     type Query {
-        users(query: String):[User!]!
-        posts:[Post!]!
-        postsByFilter(query: String!):[Post!]!
-        myPosts(query: String):[Post!]!
-        comments: [Comment!]!
+        users(query: String, first: Int, skip: Int, after: String, orderBy: UserOrderByInput):[User!]!
+        posts(first: Int, skip: Int, after: String, orderBy: PostOrderByInput):[Post!]!
+        postsByFilter(query: String!,first: Int, skip: Int, after: String, orderBy: PostOrderByInput):[Post!]!
+        myPosts(query: String,first: Int, skip: Int, after: String, orderBy: PostOrderByInput):[Post!]!
+        comments(first: Int, skip: Int, after: String, orderBy: CommentOrderByInput): [Comment!]!
         post(id: ID!):  Post!
         me:User!
     }
@@ -58,6 +61,8 @@
         age: Int
         posts:[Post!]!
         comments:[Comment!]!
+        updatedAt: String!
+        createdAt: String!
     }
 
     input CreatePostInput{
@@ -79,6 +84,8 @@
         published: Boolean!
         author: User!
         comments:[Comment!]!
+        updatedAt: String!
+        createdAt: String!
     }
 
     input CreateCommentInput {
@@ -95,6 +102,8 @@
         text: String!
         author: User!
         post: Post!
+        updatedAt: String!
+        createdAt: String!
     }
 
     type Teste {
