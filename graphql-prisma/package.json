@@ -6,7 +6,7 @@
     "start": "node dist/index.js",
     "heroku-postbuild": "babel src --out-dir dist --copy-files",
     "dev": "env-cmd ./config/dev.env babel-node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --watch",
     "get-schema": "graphql get-schema -p prisma --dotenv config/dev.env"
   },
   "author": "",
@@ -24,6 +24,7 @@
   },
   "description": "",
   "devDependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.26.0"
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "jest": "^23.5.0"
   }
 }
