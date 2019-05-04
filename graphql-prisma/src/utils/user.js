@@ -1,5 +1,10 @@
-const getFirstName = (fullName) => {
+const GetFirstName = (fullName) => {
     return fullName.split(' ')[0];
 }
 
-export default getFirstName;
+const IsValidPassword = (password) => {
+    var isValid = password.length >= 8 && !password.toLowerCase().includes('password');
+    return isValid;
+}
+
+export { GetFirstName, IsValidPassword};

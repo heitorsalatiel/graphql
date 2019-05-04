@@ -24,6 +24,9 @@
   },
   "description": "",
   "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "jest": "^24.7.1"
   }
