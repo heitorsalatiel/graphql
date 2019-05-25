@@ -17,7 +17,7 @@ var getUserId = function getUserId(request) {
     var header = request.request ? request.request.headers.authorization : request.connection.context.Authorization;
     if (header) {
         var codeToken = header.replace('Bearer ', '');
-        var decoded = _jsonwebtoken2.default.verify(codeToken, 'thisisasecret');
+        var decoded = _jsonwebtoken2.default.verify(codeToken, process.env.PRISMA_TOKEN_SECRET);
         return decoded.userId;
     }
 
