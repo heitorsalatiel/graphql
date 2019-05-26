@@ -1,9 +1,8 @@
 import 'cross-fetch/polyfill';
-import {gql} from 'apollo-boost';
 import seedDatabase,{userOne,postOne,postTwo} from './utils/seedDatabase';
 import getClient from './utils/getClient';
 import prisma from './../src/prisma';
-import {getPosts, myPost, updatePost, createPost, deletePost} from './utils/operations';
+import {getPosts, myPost, updatePost, createPost, deletePost, subscribeToPosts} from './utils/operations';
 const client = getClient();
 
 beforeAll(() => {
@@ -14,7 +13,7 @@ beforeEach(seedDatabase);
 test('Should expose only published posts', async() => {
 
     const response = await client.query({query:getPosts});
-    expect(response.data.posts.length).toBe(1);
+    expect(response.data.posts.length).toBe(2);
     expect(response.data.posts[0].published).toBe(true);
 
 });
@@ -32,7 +31,7 @@ test('Should fetch a user post', async () => {
 test('Should be able to update own post', async () => {
     const client  = getClient(userOne.jwt);
     const variables = {
-        id: "${postOne.post.id}",
+        id: postOne.post.id,
         data: {
             published: false
         }
@@ -63,11 +62,24 @@ test('Should create a post', async() => {
 test('Should delete a post', async() => {
     const client = getClient(userOne.jwt);
     const variables = {
-        id:"${postTwo.post.id}"
+        id:postTwo.post.id
     }
 
     await client.mutate({mutation: deletePost, variables});
     const exists = await prisma.exists.Post({id: postTwo.post.id});
     expect(exists).toBe(false);
 });
+
+test('Should subscribe for post changes', async () => {
+
+	client.subscribe({query:subscribeToPosts}).subscribe({
+		next(response) {
+			expect(response.data.post.mutation).toBe('DELETED');
+			done();
+		}
+	})
+
+	//Chnage a comment
+	await prisma.mutation.deletePost({where:{id:postOne.post.id}})
+})
 

@@ -7,18 +7,18 @@ import {getUsers, getProfile, createUser} from './utils/operations';
 
 const client = getClient();
 
+beforeAll(() => {
+    jest.setTimeout(10000); 
+});
 beforeEach(seedDatabase);
-
-
-
 
 test('Should create a new user', async () => {
 
     const variables = {
         data: {
             name: "Heitor",
-            email: "heitor22@gmail.com",
-            password: "12345678"
+            email: "heitortest1@gmail.com",
+            password: "1234567800"
         }
     }
 
@@ -39,7 +39,7 @@ test('Should expose public author profile', async () => {
 
     const response = await client.query({query:getUsers});
     
-    expect(response.data.users.length).toBe(1);
+    expect(response.data.users.length).toBe(2);
     expect(response.data.users[0].email).toBe(null);
     expect(response.data.users[0].name).toBe('Jen');
 
